@@ -10,7 +10,12 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'], credentials: false }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://shop-application-phi.vercel.app',
+];
+app.use(cors({ origin: allowedOrigins, credentials: false }));
 app.use(express.json());
 
 app.get('/', (req, res) => {

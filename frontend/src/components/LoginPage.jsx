@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OTPInput from './OTPInput'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
-  ? `${import.meta.env.VITE_API_BASE_URL}/api/auth`
-  : '/api/auth'
+const API_BASE =
+  (import.meta.env.VITE_API_BASE_URL || 'https://shop-backend-g3s8.onrender.com') + '/api/auth'
 
 function maskEmail(email) {
   const [localPart, domain] = email.split('@')
@@ -36,7 +35,11 @@ function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       })
-      const data = await res.json()
+      const contentType = res.headers.get('content-type')
+      const data =
+        contentType && contentType.includes('application/json')
+          ? await res.json()
+          : { error: res.ok ? 'Invalid response' : 'Server unavailable. Please try again.' }
       if (!res.ok) throw new Error(data.error || 'Failed to send OTP')
       setMessage(data.message || 'OTP sent to your email. Check your inbox.')
       setOtpSent(true)
@@ -58,7 +61,11 @@ function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), otpCode: otp }),
       })
-      const data = await res.json()
+      const contentType = res.headers.get('content-type')
+      const data =
+        contentType && contentType.includes('application/json')
+          ? await res.json()
+          : { error: res.ok ? 'Invalid response' : 'Server unavailable. Please try again.' }
       if (!res.ok) throw new Error(data.error || 'Failed to verify OTP')
       setMessage(data.message || 'Verified successfully!')
       setVerified(true)
