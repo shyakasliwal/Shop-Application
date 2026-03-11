@@ -15,7 +15,20 @@ const allowedOrigins = [
   'http://localhost:5174',
   'https://shop-application-phi.vercel.app',
 ];
-app.use(cors({ origin: allowedOrigins, credentials: false }));
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false,
+  })
+);
 app.use(express.json());
 
 app.get('/', (req, res) => {
