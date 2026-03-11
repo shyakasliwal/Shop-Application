@@ -2,6 +2,8 @@ import Layout from "../components/Layout";
 import ProductCard from "../components/ProductCard";
 import React, { useEffect, useState } from "react";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
 const initialFormState = {
   name: "",
   type: "",
@@ -59,7 +61,7 @@ const Product = () => {
     try {
       setLoading(true);
       setError("");
-      const res = await fetch("/api/products");
+      const res = await fetch(`${API_BASE}/api/products`);
       if (!res.ok) {
         throw new Error("Failed to load products");
       }
@@ -179,8 +181,8 @@ const Product = () => {
 
       const isEditing = Boolean(editingProduct);
       const url = isEditing
-        ? `/api/products/${editingProduct.id}`
-        : "/api/products";
+        ? `${API_BASE}/api/products/${editingProduct.id}`
+        : `${API_BASE}/api/products`;
       const method = isEditing ? "PATCH" : "POST";
 
       const res = await fetch(url, {
@@ -267,7 +269,7 @@ const Product = () => {
   const handleTogglePublish = async (product) => {
     try {
       const isCurrentlyPublished = product.status === "published";
-      const res = await fetch(`/api/products/${product.id}/publish`, {
+      const res = await fetch(`${API_BASE}/api/products/${product.id}/publish`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -296,7 +298,7 @@ const Product = () => {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/products/${product.id}`, {
+      const res = await fetch(`${API_BASE}/api/products/${product.id}`, {
         method: "DELETE",
       });
 

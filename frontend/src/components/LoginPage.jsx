@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OTPInput from './OTPInput'
 
-const API_BASE = '/api/auth'
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api/auth`
+  : '/api/auth'
 
 function maskEmail(email) {
   const [localPart, domain] = email.split('@')
