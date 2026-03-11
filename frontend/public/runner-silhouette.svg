@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" fill="white">
+  <!-- Runner silhouette - athletic figure in motion -->
+  <ellipse cx="60" cy="25" rx="12" ry="14" fill="white"/>
+  <path d="M48 42 L52 75 L56 95 L60 100 L64 95 L68 75 L72 42" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M56 100 L56 165 L64 165 L64 100" fill="white"/>
+  <path d="M52 75 L38 105 L32 140 L38 142 L44 108" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M68 75 L82 105 L88 140 L82 142 L76 108" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M58 50 L72 42 L78 58 L72 64 Z" fill="white" opacity="0.95"/>
+  <path d="M62 50 L48 42 L42 58 L48 64 Z" fill="white" opacity="0.9"/>
+</svg>
