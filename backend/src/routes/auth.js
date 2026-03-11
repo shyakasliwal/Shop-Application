@@ -15,7 +15,8 @@ function generateOtp() {
 /** Send OTP email via Resend API (HTTP). Use when SMTP is blocked on Render. */
 async function sendOtpViaResend(to, otpCode) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || process.env.SMTP_EMAIL || 'onboarding@resend.dev';
+  // Resend free tier: use onboarding@resend.dev or your verified domain email
+  const from = process.env.RESEND_FROM || 'onboarding@resend.dev';
   if (!apiKey) return false;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -24,7 +25,7 @@ async function sendOtpViaResend(to, otpCode) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      from: `Productr OTP <${from}>`,
+      from: `Productr <${from}>`,
       to: [to],
       subject: 'Your Productr login OTP',
       html: `<p>Your OTP code is</p>
@@ -101,7 +102,11 @@ router.post('/send-otp', async (req, res) => {
     });
   } catch (err) {
     console.error('Error in /send-otp', err);
-    return res.status(500).json({ error: 'Failed to send OTP' });
+    const message =
+      process.env.NODE_ENV === 'development'
+        ? (err.message || 'Failed to send OTP')
+        : 'Failed to send OTP. Check server email config (SMTP or Resend) and logs.';
+    return res.status(500).json({ error: message });
   }
 });
 
