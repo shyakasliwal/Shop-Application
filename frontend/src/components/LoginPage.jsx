@@ -40,11 +40,21 @@ function LoginPage() {
         contentType && contentType.includes('application/json')
           ? await res.json()
           : { error: res.ok ? 'Invalid response' : 'Server unavailable. Please try again.' }
-      if (!res.ok) throw new Error(data.error || 'Failed to send OTP')
+      if (!res.ok) {
+        if (res.status === 404 || res.status === 502 || res.status === 503) {
+          throw new Error('Backend is starting up (Render free tier). Wait 30–60 seconds and try again.')
+        }
+        throw new Error(data.error || 'Failed to send OTP')
+      }
       setMessage(data.message || 'OTP sent to your email. Check your inbox.')
       setOtpSent(true)
     } catch (err) {
-      setError(err.message || 'Could not send OTP. Check your email and try again.')
+      const msg = err.message || 'Could not send OTP. Check your email and try again.'
+      setError(
+        err.name === 'TypeError' && err.message === 'Failed to fetch'
+          ? 'Backend unreachable. Wait a minute and try again (Render may be starting).'
+          : msg
+      )
     } finally {
       setLoading(false)
     }
