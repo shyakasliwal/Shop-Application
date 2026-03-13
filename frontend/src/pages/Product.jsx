@@ -2,7 +2,7 @@ import Layout from "../components/Layout";
 import ProductCard from "../components/ProductCard";
 import React, { useEffect, useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://shop-backend-g3s8.onrender.com';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const initialFormState = {
   name: "",

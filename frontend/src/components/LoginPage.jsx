@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OTPInput from './OTPInput'
 
-const API_BASE =
-  (import.meta.env.VITE_API_BASE_URL || 'https://shop-backend-g3s8.onrender.com') + '/api/auth'
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api/auth`
+  : '/api/auth'
 
 function maskEmail(email) {
   const [localPart, domain] = email.split('@')
@@ -208,13 +209,6 @@ function LoginPage() {
           )}
           {error && (
             <p className="mt-4 text-red-600 text-sm">{error}</p>
-          )}
-
-          {verified && token && (
-            <div className="mt-6 p-4 bg-slate-50 rounded-xl">
-              <p className="text-sm font-medium text-slate-700 mb-1">Logged in successfully</p>
-              <p className="text-xs text-slate-500 break-all">{token}</p>
-            </div>
           )}
 
           <div className="mt-10 text-center">

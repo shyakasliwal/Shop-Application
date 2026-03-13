@@ -35,43 +35,36 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'OTP Auth API running' });
 });
 
+// Return 503 when MongoDB is not connected so the frontend gets a clear message
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ error: 'Database not connected. Set MONGODB_URI in backend/.env and ensure MongoDB is running.' });
+  }
+  next();
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 
 const PORT = process.env.PORT || 5000;
 const mongoUri = process.env.MONGODB_URI;
 
+// Start server first so it runs even when MongoDB is unavailable (e.g. local dev without DB)
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
+
 if (!mongoUri) {
-  console.error('Missing MONGODB_URI in environment');
-  process.exit(1);
-}
-
-// If you get querySrv ECONNREFUSED: your network/DNS blocks SRV lookups.
-// In Atlas: Connect → "Connect using MongoDB Compass" → copy the standard URI
-// (starts with mongodb://, not mongodb+srv://) and use it as MONGODB_URI.
-const mongooseOptions = {
-  serverSelectionTimeoutMS: 10000,
-};
-
-mongoose
-  .connect(mongoUri, mongooseOptions)
-  .then(() => {
+  console.warn('Missing MONGODB_URI in backend/.env — set it to use login and products. Server is running.');
+} else {
+  const mongooseOptions = { serverSelectionTimeoutMS: 10000 };
+  mongoose.connect(mongoUri, mongooseOptions).then(() => {
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server listening on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error', err.message || err);
-    if (
-      String(err.code || err.message || '').includes('ECONNREFUSED') ||
-      String(err.message || '').includes('querySrv')
-    ) {
-      console.error('\n--- If your URI is correct, the SRV DNS lookup may be blocked. ---');
-      console.error('Fix: In MongoDB Atlas use Connect → "Connect using MongoDB Compass"');
-      console.error('     and copy the standard URI (mongodb://... not mongodb+srv://...).');
-      console.error('     Set that as MONGODB_URI in your .env file.\n');
+  }).catch((err) => {
+    console.error('MongoDB connection error:', err.message || err);
+    if (String(err.code || err.message || '').includes('ECONNREFUSED') || String(err.message || '').includes('querySrv')) {
+      console.error('Tip: Use MongoDB Atlas URI in backend/.env or start MongoDB locally (mongodb://localhost:27017/productiolo).');
     }
-    process.exit(1);
   });
+}
 

@@ -12,34 +12,6 @@ function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-/** Send OTP email via Resend API (HTTP). Use when SMTP is blocked on Render. */
-async function sendOtpViaResend(to, otpCode) {
-  const apiKey = process.env.RESEND_API_KEY;
-  // Resend free tier: use onboarding@resend.dev or your verified domain email
-  const from = process.env.RESEND_FROM || 'onboarding@resend.dev';
-  if (!apiKey) return false;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      from: `Productr <${from}>`,
-      to: [to],
-      subject: 'Your Productr login OTP',
-      html: `<p>Your OTP code is</p>
-             <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">${otpCode}</p>
-             <p>This code will expire in ${OTP_EXPIRY_MINUTES} minutes.</p>`,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `Resend API ${res.status}`);
-  }
-  return true;
-}
-
 function createTransporter() {
   const { SMTP_EMAIL, SMTP_PASSWORD } = process.env;
 
@@ -47,18 +19,20 @@ function createTransporter() {
     throw new Error('SMTP_EMAIL or SMTP_PASSWORD is missing in environment');
   }
 
-  // Use port 587 + STARTTLS (often allowed on Render); port 465 can be blocked
+  // Use Gmail service with IPv4 only so it behaves the same
+  // locally and on hosts where IPv6 connectivity is unreliable (ENETUNREACH).
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    requireTLS: true,
+    service: 'gmail',
     auth: {
       user: SMTP_EMAIL,
       pass: SMTP_PASSWORD,
     },
-    connectionTimeout: 15000,
-    greetingTimeout: 10000,
+    connectionTimeout: 20000,
+    greetingTimeout: 15000,
+    tls: {
+      rejectUnauthorized: true,
+    },
+    family: 4, // force IPv4 to avoid 2607:... ENETUNREACH
   });
 }
 
@@ -82,19 +56,15 @@ router.post('/send-otp', async (req, res) => {
       expiresAt,
     });
 
-    if (process.env.RESEND_API_KEY) {
-      await sendOtpViaResend(normalizedEmail, otpCode);
-    } else {
-      const transporter = createTransporter();
-      await transporter.sendMail({
-        from: `"Productr OTP" <${process.env.SMTP_EMAIL}>`,
-        to: normalizedEmail,
-        subject: 'Your Productr login OTP',
-        html: `<p>Your OTP code is</p>
-               <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">${otpCode}</p>
-               <p>This code will expire in ${OTP_EXPIRY_MINUTES} minutes.</p>`,
-      });
-    }
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: `"Productr OTP" <${process.env.SMTP_EMAIL}>`,
+      to: normalizedEmail,
+      subject: 'Your Productr login OTP',
+      html: `<p>Your OTP code is</p>
+             <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">${otpCode}</p>
+             <p>This code will expire in ${OTP_EXPIRY_MINUTES} minutes.</p>`,
+    });
 
     return res.json({
       message: 'OTP sent successfully',
@@ -105,7 +75,7 @@ router.post('/send-otp', async (req, res) => {
     const message =
       process.env.NODE_ENV === 'development'
         ? (err.message || 'Failed to send OTP')
-        : 'Failed to send OTP. Check server email config (SMTP or Resend) and logs.';
+        : 'Failed to send OTP. Check SMTP_EMAIL, SMTP_PASSWORD (use Gmail App Password), and server logs.';
     return res.status(500).json({ error: message });
   }
 });
