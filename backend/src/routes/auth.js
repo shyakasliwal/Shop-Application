@@ -23,6 +23,8 @@ function createTransporter() {
   // locally and on hosts where IPv6 connectivity is unreliable (ENETUNREACH).
   return nodemailer.createTransport({
     service: 'gmail',
+    port: 587,
+    secure: false,
     auth: {
       user: SMTP_EMAIL,
       pass: SMTP_PASSWORD,
