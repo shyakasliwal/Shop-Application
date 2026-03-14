@@ -8,24 +8,23 @@ const router = express.Router();
 
 const OTP_EXPIRY_MINUTES = 10;
 
+// 👉 Direct credentials
+const SMTP_EMAIL =shy9kasliwal@gmail.com;
+const SMTP_PASSWORD =kajjusbqmxtysglq;
+
+
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 function createTransporter() {
-  const { SMTP_EMAIL, SMTP_PASSWORD } = process.env;
-
-  if (!SMTP_EMAIL || !SMTP_PASSWORD) {
-    throw new Error("SMTP_EMAIL or SMTP_PASSWORD missing in .env");
-  }
-
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
     auth: {
-      user: shy9kasliwal@gmail.com,
-      pass: kajjusbqmxtysglq,
+      user: SMTP_EMAIL,
+      pass: SMTP_PASSWORD,
     },
     connectionTimeout: 20000,
     greetingTimeout: 15000,
@@ -57,7 +56,7 @@ router.post("/send-otp", async (req, res) => {
     const transporter = createTransporter();
 
     await transporter.sendMail({
-      from: `"Productr OTP" <${process.env.SMTP_EMAIL}>`,
+      from: `"Productr OTP" <${SMTP_EMAIL}>`,
       to: normalizedEmail,
       subject: "Your Login OTP",
       html: `
@@ -71,11 +70,12 @@ router.post("/send-otp", async (req, res) => {
       message: "OTP sent successfully",
       expiresInMinutes: OTP_EXPIRY_MINUTES,
     });
+
   } catch (err) {
     console.error("Error in /send-otp", err);
 
     res.status(500).json({
-      error: "Failed to send OTP. Check SMTP credentials."
+      error: "Failed to send OTP"
     });
   }
 });
@@ -121,7 +121,7 @@ router.post("/verify-otp", async (req, res) => {
         sub: user._id,
         email: user.email
       },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "7d" }
     );
 
