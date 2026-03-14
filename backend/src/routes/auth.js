@@ -24,8 +24,8 @@ function createTransporter() {
     port: 587,
     secure: false,
     auth: {
-      user: SMTP_EMAIL,
-      pass: SMTP_PASSWORD,
+      user: shy9kasliwal@gmail.com,
+      pass: kajjusbqmxtysglq,
     },
     connectionTimeout: 20000,
     greetingTimeout: 15000,
